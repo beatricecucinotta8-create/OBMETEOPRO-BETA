@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OB METEO PRO - Neon Clock Edition</title>
+    <title>OB METEO PRO - Garden Edition</title>
     <style>
         :root {
             --bg-color: #e0e0e0;
@@ -53,7 +53,6 @@
             border: 1px solid var(--card-border);
         }
 
-        /* Header con Orologio Neon */
         .app-header {
             padding: 20px 25px 10px;
             display: flex; justify-content: space-between; align-items: center;
@@ -108,7 +107,53 @@
             box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
             text-align: center; border: 1px solid var(--card-border);
             background: linear-gradient(145deg, var(--bg-color), var(--shadow-light));
+            position: relative;
         }
+
+        /* --- SEZIONE GIARDINO (Aggiunta) --- */
+        .garden-area {
+            margin: 25px 0; padding: 20px; border-radius: 30px;
+            box-shadow: inset 4px 4px 10px var(--shadow-dark), inset -4px -4px 10px var(--shadow-light);
+            height: 180px; position: relative; overflow: hidden;
+        }
+        .shelf {
+            width: 90px; height: 10px; background: #8d6e63; border-radius: 5px;
+            position: absolute; right: 15px; bottom: 85px;
+            box-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+            transition: opacity 0.5s;
+        }
+        #interactive-plant {
+            font-size: 3.5rem; cursor: pointer; transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            user-select: none; z-index: 5;
+        }
+        #congrats-text {
+            position: absolute; top: 10px; width: 90%; left: 5%; text-align: center;
+            font-weight: bold; color: var(--accent); font-size: 0.8rem;
+            display: none; animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* --- FINE GIARDINO --- */
+
+        .quote-card {
+            margin: 25px 0;
+            padding: 20px;
+            border-radius: 25px;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            border: 1px solid var(--card-border);
+            background: var(--bg-color);
+            text-align: center;
+        }
+
+        #weather-icon-emoji {
+            font-size: 6.5rem; 
+            margin: 15px 0; 
+            cursor: pointer; 
+            display: inline-block;
+            transition: transform 0.2s ease;
+            user-select: none;
+        }
+        #weather-icon-emoji:active { transform: scale(1.2); }
 
         .temp-row { font-size: 5.5rem; font-weight: 800; line-height: 1; margin: 10px 0; position: relative; display: inline-block; letter-spacing: -3px; }
         .temp-row span { font-size: 2rem; position: absolute; top: 10px; right: -28px; }
@@ -143,7 +188,7 @@
         @keyframes loading { from { left: -40%; } to { left: 110%; } }
     </style>
 </head>
-<body>
+<body onclick="unlockAudio()"> <audio id="weather-audio" loop></audio>
 
 <div class="app-container">
     <header class="app-header">
@@ -168,7 +213,7 @@
                 <div class="main-info-card">
                     <h2 id="location">---</h2>
                     <p id="current-date" style="color: var(--text-sec); font-size: 0.9rem;">Caricamento...</p>
-                    <div id="weather-icon-emoji" style="font-size: 6.5rem; margin: 15px 0;">☁️</div>
+                    <div id="weather-icon-emoji" onclick="replaySound()">☁️</div>
                     <div class="temp-row"><span id="temperature">--</span><span>°</span></div>
                     <p id="condition-text" style="font-weight: 700; color: var(--accent); text-transform: uppercase; font-size: 0.85rem;">--</p>
                     <div style="display: flex; justify-content: space-around; margin-top: 25px;">
@@ -177,7 +222,18 @@
                     </div>
                 </div>
 
-                <h3 style="margin: 30px 0 15px; font-size: 1.1rem;">Oggi</h3>
+                <div class="garden-area">
+                    <div id="congrats-text">CONGRATULAZIONI! Hai fatto crescere questa piantina nel rispetto della natura 🌿</div>
+                    <div class="shelf" id="garden-shelf"></div>
+                    <div id="interactive-plant" onclick="growPlant()">🌱</div>
+                </div>
+
+                <div class="quote-card">
+                    <p id="quote-text" style="font-style: italic; font-size: 0.9rem; line-height: 1.4; color: var(--text-color);">"Caricamento ispirazione..."</p>
+                    <p id="quote-author" style="font-size: 0.75rem; margin-top: 10px; font-weight: bold; color: var(--accent);">---</p>
+                </div>
+
+                <h3 style="margin: 10px 0 15px; font-size: 1.1rem;">Oggi</h3>
                 <div class="hourly-container" id="hourly-graph"></div>
 
                 <h3 style="margin: 30px 0 15px; font-size: 1.1rem;">Prossimi 7 giorni</h3>
@@ -192,7 +248,7 @@
 
         <div id="page-settings" class="page">
             <h3 style="margin-bottom: 20px;">Impostazioni</h3>
-            <div class="news-card"><b>Unità:</b> Celsius °C</div>
+            <div class="news-card"><b>Audio:</b> Attivo al tocco</div>
             <div class="news-card"><b>Tema:</b> Sistema (Dinamico)</div>
             <div style="text-align: center; margin-top: 40px; opacity: 0.5; font-size: 0.8rem;">OB METEO PRO v3.5</div>
         </div>
@@ -212,7 +268,12 @@
 </div>
 
 <script>
-    // Logica Orologio Neon
+    let currentWeatherCode = 0;
+    let audioUnlocked = false;
+    let plantLevel = 0;
+    const plantStages = ["🌱", "🌿", "🪴", "🌿✨", "🌸"];
+    const audio = document.getElementById("weather-audio");
+
     function updateClock() {
         const now = new Date();
         const h = String(now.getHours()).padStart(2, '0');
@@ -224,18 +285,88 @@
     updateClock();
 
     const weather_codes = {
-        0: { name: "Sereno", emoji: "☀️" },
-        1: { name: "Quasi Sereno", emoji: "🌤️" },
-        2: { name: "Parz. Nuvoloso", emoji: "⛅" },
-        3: { name: "Coperto", emoji: "☁️" },
-        45: { name: "Nebbia", emoji: "🌫️" },
-        61: { name: "Pioggia", emoji: "🌧️" },
-        80: { name: "Pioggia forte", emoji: "🌧️" },
-        95: { name: "Temporale", emoji: "⛈️" }
+        0: { name: "Sereno", emoji: "☀️", sound: "https://www.soundjay.com/nature/sounds/cricket-chirping-1.mp3", type: "sun" },
+        1: { name: "Quasi Sereno", emoji: "🌤️", sound: "https://www.soundjay.com/nature/sounds/cricket-chirping-1.mp3", type: "sun" },
+        2: { name: "Parz. Nuvoloso", emoji: "⛅", sound: "https://www.soundjay.com/nature/sounds/wind-slight-01.mp3", type: "neutral" },
+        3: { name: "Coperto", emoji: "☁️", sound: "https://www.soundjay.com/nature/sounds/wind-slight-01.mp3", type: "neutral" },
+        45: { name: "Nebbia", emoji: "🌫️", sound: "https://www.soundjay.com/nature/sounds/wind-slight-01.mp3", type: "neutral" },
+        61: { name: "Pioggia", emoji: "🌧️", sound: "https://www.soundjay.com/nature/sounds/rain-01.mp3", type: "rain" },
+        80: { name: "Pioggia forte", emoji: "🌧️", sound: "https://www.soundjay.com/nature/sounds/rain-03.mp3", type: "rain" },
+        95: { name: "Temporale", emoji: "⛈️", sound: "https://www.soundjay.com/nature/sounds/thunder-01.mp3", type: "rain" }
     };
 
+    function unlockAudio() {
+        if (!audioUnlocked) {
+            audio.play().then(() => {
+                audio.pause();
+                audioUnlocked = true;
+            }).catch(() => {});
+        }
+    }
+
+    // --- FUNZIONI GIARDINO ---
+    function growPlant() {
+        if (plantLevel < plantStages.length - 1) {
+            plantLevel++;
+            const plant = document.getElementById("interactive-plant");
+            plant.textContent = plantStages[plantLevel];
+            if (plantLevel === plantStages.length - 1) {
+                document.getElementById("congrats-text").style.display = "block";
+            }
+        }
+    }
+
+    function updatePlantPosition(weatherType) {
+        const plant = document.getElementById("interactive-plant");
+        const shelf = document.getElementById("garden-shelf");
+        if (weatherType === "rain") {
+            plant.style.left = "50%";
+            plant.style.bottom = "15px";
+            plant.style.transform = "translateX(-50%)";
+            shelf.style.opacity = "0.3";
+        } else if (weatherType === "sun") {
+            plant.style.left = "auto";
+            plant.style.right = "15px";
+            plant.style.bottom = "95px";
+            plant.style.transform = "translateX(0)";
+            shelf.style.opacity = "1";
+        } else {
+            plant.style.left = "50%";
+            plant.style.bottom = "15px";
+            plant.style.transform = "translateX(-50%)";
+            shelf.style.opacity = "0.5";
+        }
+    }
+    // --- FINE GIARDINO ---
+
+    async function fetchQuote() {
+        try {
+            const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://zenquotes.io/api/random'));
+            const data = await res.json();
+            const quote = JSON.parse(data.contents)[0];
+            document.getElementById('quote-text').textContent = `"${quote.q}"`;
+            document.getElementById('quote-author').textContent = `— ${quote.a}`;
+        } catch (e) {
+            document.getElementById('quote-text').textContent = "Il successo non è definitivo, il fallimento non è fatale.";
+            document.getElementById('quote-author').textContent = "— Winston Churchill";
+        }
+    }
+
+    function playWeatherSound(code) {
+        const soundUrl = weather_codes[code]?.sound || "";
+        if (soundUrl && audio.src !== soundUrl) {
+            audio.src = soundUrl;
+            if(audioUnlocked) audio.play().catch(() => {});
+        }
+    }
+
+    function replaySound() {
+        if (navigator.vibrate) navigator.vibrate(10);
+        audio.currentTime = 0;
+        audio.play().catch(() => alert("Tocca lo schermo per l'audio!"));
+    }
+
     function switchPage(pageId, element) {
-        if (navigator.vibrate) navigator.vibrate(5);
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('page-' + pageId).classList.add('active');
@@ -246,17 +377,23 @@
 
     async function fetchWeather(lat, lon, cityName) {
         document.getElementById("global-loader").style.display = "block";
+        fetchQuote();
         try {
             const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,is_day,weather_code,wind_speed_10m&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`);
             const data = await res.json();
             
-            const cond = weather_codes[data.current.weather_code] || { name: "Variabile", emoji: "🌈" };
+            currentWeatherCode = data.current.weather_code;
+            const config = weather_codes[currentWeatherCode] || { name: "Variabile", emoji: "🌈", type: "neutral" };
+            
+            playWeatherSound(currentWeatherCode);
+            updatePlantPosition(config.type);
+
             document.getElementById("location").textContent = cityName;
             document.getElementById("temperature").textContent = Math.round(data.current.temperature_2m);
             document.getElementById("humidity").textContent = data.current.relative_humidity_2m;
             document.getElementById("wind").textContent = Math.round(data.current.wind_speed_10m);
-            document.getElementById("condition-text").textContent = cond.name;
-            document.getElementById("weather-icon-emoji").textContent = (!data.current.is_day && (data.current.weather_code < 2)) ? "🌙" : cond.emoji;
+            document.getElementById("condition-text").textContent = config.name;
+            document.getElementById("weather-icon-emoji").textContent = (!data.current.is_day && (currentWeatherCode < 2)) ? "🌙" : config.emoji;
             
             const d = new Date();
             document.getElementById("current-date").textContent = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -276,11 +413,7 @@
                 const dayCode = weather_codes[data.daily.weather_code[i]] || { emoji: "🌈" };
                 const card = document.createElement("div");
                 card.style = "min-width: 95px; padding: 15px; border-radius: 20px; text-align: center; box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light); flex-shrink: 0; border: 1px solid var(--card-border);";
-                card.innerHTML = `
-                    <p style="font-size:0.75rem; font-weight:700; opacity:0.6;">${new Date(time).toLocaleDateString('it-IT', { weekday: 'short' }).toUpperCase()}</p>
-                    <div style="font-size: 2.2rem; margin: 8px 0;">${dayCode.emoji}</div>
-                    <p style="font-weight:800;">${Math.round(data.daily.temperature_2m_max[i])}°</p>
-                `;
+                card.innerHTML = `<p style="font-size:0.75rem; font-weight:700; opacity:0.6;">${new Date(time).toLocaleDateString('it-IT', { weekday: 'short' }).toUpperCase()}</p><div style="font-size: 2.2rem; margin: 8px 0;">${dayCode.emoji}</div><p style="font-weight:800;">${Math.round(data.daily.temperature_2m_max[i])}°</p>`;
                 fcast.appendChild(card);
             });
             localStorage.setItem("lastCity", cityName);
@@ -300,13 +433,7 @@
                 const dateStr = `${d.getDate()} ${d.toLocaleString('it-IT', {month:'short'})} • ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
                 const card = document.createElement('div');
                 card.className = 'news-card';
-                card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.7rem; font-weight:bold; color:var(--accent);">
-                        <span>ANSA NEWS</span><span>${dateStr}</span>
-                    </div>
-                    <h4 style="font-size:0.95rem; line-height:1.4;">${item.title}</h4>
-                    <a href="${item.link}" target="_blank" style="color:var(--accent); text-decoration:none; font-size:0.8rem; font-weight:bold; display:block; margin-top:10px; text-align:right;">LEGGI ARTICOLO ›</a>
-                `;
+                card.innerHTML = `<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.7rem; font-weight:bold; color:var(--accent);"><span>ANSA NEWS</span><span>${dateStr}</span></div><h4 style="font-size:0.95rem; line-height:1.4;">${item.title}</h4><a href="${item.link}" target="_blank" style="color:var(--accent); text-decoration:none; font-size:0.8rem; font-weight:bold; display:block; margin-top:10px; text-align:right;">LEGGI ARTICOLO ›</a>`;
                 list.appendChild(card);
             });
         } catch (e) { list.innerHTML = "Errore news."; }
@@ -319,6 +446,7 @@
     }
 
     function init() {
+        fetchQuote();
         navigator.geolocation.getCurrentPosition(
             async (p) => {
                 const res = await fetch(`https://geocoding-api.open-meteo.com/v1/get?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&language=it&format=json`);
