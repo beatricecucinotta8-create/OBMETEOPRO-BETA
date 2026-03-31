@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OB METEO PRO - Neon Clock Edition</title>
+    <style>
+        :root {
+            --bg-color: #e0e0e0;
+            --shadow-dark: #bebebe;
+            --shadow-light: #ffffff;
+            --accent: #1dd1a1;
+            --text-color: #333;
+            --text-sec: #666;
+            --card-border: rgba(255, 255, 255, 0.5);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --neon-glow: rgba(29, 209, 161, 0.5);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #2c2c2c;
+                --shadow-dark: #1a1a1a;
+                --shadow-light: #3e3e3e;
+                --text-color: #eee;
+                --text-sec: #aaa;
+                --card-border: rgba(255, 255, 255, 0.05);
+                --neon-glow: rgba(29, 209, 161, 0.8);
+            }
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: "Segoe UI", "Roboto", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .app-container {
+            background: var(--bg-color);
+            width: 100%; max-width: 450px; height: 95vh;
+            border-radius: 40px;
+            box-shadow: 20px 20px 60px var(--shadow-dark), -20px -20px 60px var(--shadow-light);
+            display: flex; flex-direction: column;
+            overflow: hidden; position: relative;
+            border: 1px solid var(--card-border);
+        }
+
+        /* Header con Orologio Neon */
+        .app-header {
+            padding: 20px 25px 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-color);
+            z-index: 10;
+        }
+        
+        .app-header h1 { font-size: 1.2rem; font-weight: 800; letter-spacing: -1px; flex: 1; }
+
+        #neon-clock {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 900;
+            font-size: 1.1rem;
+            color: var(--accent);
+            text-shadow: 0 0 5px var(--neon-glow), 0 0 10px var(--neon-glow);
+            padding: 5px 12px;
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+            margin: 0 15px;
+            letter-spacing: 1px;
+        }
+
+        .content-area {
+            flex: 1; overflow-y: auto; padding: 0 20px 110px;
+            scrollbar-width: none;
+        }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        .page { display: none; opacity: 0; transform: translateY(10px); transition: var(--transition); }
+        .page.active { display: block; opacity: 1; transform: translateY(0); }
+
+        .search-section { display: flex; gap: 10px; margin: 10px 0 20px; }
+        input {
+            flex: 1; padding: 16px; border: none; border-radius: 20px;
+            background: var(--bg-color);
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+            color: var(--text-color); font-size: 1rem; outline: none;
+        }
+
+        .btn-nm {
+            width: 52px; height: 52px; border: none; border-radius: 18px;
+            background: var(--bg-color);
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: var(--accent); font-size: 1.2rem; transition: 0.2s;
+        }
+        .btn-nm:active { transform: scale(0.92); box-shadow: inset 2px 2px 5px var(--shadow-dark); }
+
+        .main-info-card {
+            padding: 30px 20px; border-radius: 35px;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+            text-align: center; border: 1px solid var(--card-border);
+            background: linear-gradient(145deg, var(--bg-color), var(--shadow-light));
+        }
+
+        .temp-row { font-size: 5.5rem; font-weight: 800; line-height: 1; margin: 10px 0; position: relative; display: inline-block; letter-spacing: -3px; }
+        .temp-row span { font-size: 2rem; position: absolute; top: 10px; right: -28px; }
+
+        .hourly-container {
+            margin-top: 25px; padding: 15px; border-radius: 25px;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+            overflow-x: auto; display: flex; gap: 20px; align-items: flex-end; height: 120px;
+        }
+        .hour-tick { display: flex; flex-direction: column; align-items: center; min-width: 35px; gap: 5px; }
+        .bar { width: 6px; background: var(--accent); border-radius: 10px; transition: height 1s ease; }
+
+        .news-card {
+            padding: 20px; border-radius: 25px; margin-bottom: 15px;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            border: 1px solid var(--card-border);
+            transition: 0.3s;
+        }
+
+        .nav-bar {
+            position: absolute; bottom: 0; width: 100%; height: 90px;
+            background: var(--bg-color); display: flex; justify-content: space-around; 
+            align-items: center; padding-bottom: 10px; border-top: 1px solid var(--card-border);
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sec); cursor: pointer; }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { width: 45px; height: 45px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+        .active .nav-icon { box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light); }
+
+        .loader { width: 100%; height: 4px; background: transparent; position: relative; overflow: hidden; margin-bottom: 10px; }
+        .loader::after { content: ''; position: absolute; width: 40%; height: 100%; background: var(--accent); left: -40%; border-radius: 2px; animation: loading 1.5s infinite ease-in-out; }
+        @keyframes loading { from { left: -40%; } to { left: 110%; } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header class="app-header">
+        <h1 id="app-title">Meteo.OB</h1>
+        <div id="neon-clock">00:00:00</div>
+        <div id="status-dot" style="width: 10px; height: 10px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent);"></div>
+    </header>
+
+    <div class="loader" id="global-loader" style="display: none;"></div>
+
+    <main class="content-area">
+        <div id="page-home" class="page active">
+            <div class="search-section">
+                <form id="search-form" style="display: flex; flex: 1; gap: 10px;">
+                    <input type="text" id="location-input" placeholder="Cerca città..." autocomplete="off">
+                    <button type="submit" class="btn-nm">🔍</button>
+                </form>
+                <button id="geo-btn" class="btn-nm">📍</button>
+            </div>
+            
+            <div id="weather-details">
+                <div class="main-info-card">
+                    <h2 id="location">---</h2>
+                    <p id="current-date" style="color: var(--text-sec); font-size: 0.9rem;">Caricamento...</p>
+                    <div id="weather-icon-emoji" style="font-size: 6.5rem; margin: 15px 0;">☁️</div>
+                    <div class="temp-row"><span id="temperature">--</span><span>°</span></div>
+                    <p id="condition-text" style="font-weight: 700; color: var(--accent); text-transform: uppercase; font-size: 0.85rem;">--</p>
+                    <div style="display: flex; justify-content: space-around; margin-top: 25px;">
+                        <div><small style="color:var(--text-sec)">Umidità</small><br><b><span id="humidity">--</span>%</b></div>
+                        <div><small style="color:var(--text-sec)">Vento</small><br><b><span id="wind">--</span> km/h</b></div>
+                    </div>
+                </div>
+
+                <h3 style="margin: 30px 0 15px; font-size: 1.1rem;">Oggi</h3>
+                <div class="hourly-container" id="hourly-graph"></div>
+
+                <h3 style="margin: 30px 0 15px; font-size: 1.1rem;">Prossimi 7 giorni</h3>
+                <div id="daily-forecast" style="display: flex; gap: 15px; overflow-x: auto; padding: 5px;"></div>
+            </div>
+        </div>
+
+        <div id="page-news" class="page">
+            <h3 style="margin-bottom: 20px;">Ultime Notizie</h3>
+            <div id="news-list"></div>
+        </div>
+
+        <div id="page-settings" class="page">
+            <h3 style="margin-bottom: 20px;">Impostazioni</h3>
+            <div class="news-card"><b>Unità:</b> Celsius °C</div>
+            <div class="news-card"><b>Tema:</b> Sistema (Dinamico)</div>
+            <div style="text-align: center; margin-top: 40px; opacity: 0.5; font-size: 0.8rem;">OB METEO PRO v3.5</div>
+        </div>
+    </main>
+
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="switchPage('home', this)">
+            <div class="nav-icon">🏠</div><span>Home</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('news', this)">
+            <div class="nav-icon">📰</div><span>News</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('settings', this)">
+            <div class="nav-icon">⚙️</div><span>Setup</span>
+        </div>
+    </nav>
+</div>
+
+<script>
+    // Logica Orologio Neon
+    function updateClock() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('neon-clock').textContent = `${h}:${m}:${s}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    const weather_codes = {
+        0: { name: "Sereno", emoji: "☀️" },
+        1: { name: "Quasi Sereno", emoji: "🌤️" },
+        2: { name: "Parz. Nuvoloso", emoji: "⛅" },
+        3: { name: "Coperto", emoji: "☁️" },
+        45: { name: "Nebbia", emoji: "🌫️" },
+        61: { name: "Pioggia", emoji: "🌧️" },
+        80: { name: "Pioggia forte", emoji: "🌧️" },
+        95: { name: "Temporale", emoji: "⛈️" }
+    };
+
+    function switchPage(pageId, element) {
+        if (navigator.vibrate) navigator.vibrate(5);
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+        element.classList.add('active');
+        document.getElementById('app-title').textContent = pageId === 'home' ? 'Meteo.OB' : (pageId.charAt(0).toUpperCase() + pageId.slice(1));
+        if(pageId === 'news') fetchNews();
+    }
+
+    async function fetchWeather(lat, lon, cityName) {
+        document.getElementById("global-loader").style.display = "block";
+        try {
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,is_day,weather_code,wind_speed_10m&hourly=temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`);
+            const data = await res.json();
+            
+            const cond = weather_codes[data.current.weather_code] || { name: "Variabile", emoji: "🌈" };
+            document.getElementById("location").textContent = cityName;
+            document.getElementById("temperature").textContent = Math.round(data.current.temperature_2m);
+            document.getElementById("humidity").textContent = data.current.relative_humidity_2m;
+            document.getElementById("wind").textContent = Math.round(data.current.wind_speed_10m);
+            document.getElementById("condition-text").textContent = cond.name;
+            document.getElementById("weather-icon-emoji").textContent = (!data.current.is_day && (data.current.weather_code < 2)) ? "🌙" : cond.emoji;
+            
+            const d = new Date();
+            document.getElementById("current-date").textContent = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+
+            const graph = document.getElementById("hourly-graph");
+            graph.innerHTML = "";
+            data.hourly.temperature_2m.slice(0, 24).filter((_, i) => i % 3 === 0).forEach((t, i) => {
+                const tick = document.createElement("div");
+                tick.className = "hour-tick";
+                tick.innerHTML = `<span style="font-size:0.7rem;">${Math.round(t)}°</span><div class="bar" style="height:${(t+10)*2}px"></div><span style="font-size:0.6rem; opacity:0.6;">${i*3}:00</span>`;
+                graph.appendChild(tick);
+            });
+
+            const fcast = document.getElementById("daily-forecast");
+            fcast.innerHTML = "";
+            data.daily.time.forEach((time, i) => {
+                const dayCode = weather_codes[data.daily.weather_code[i]] || { emoji: "🌈" };
+                const card = document.createElement("div");
+                card.style = "min-width: 95px; padding: 15px; border-radius: 20px; text-align: center; box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light); flex-shrink: 0; border: 1px solid var(--card-border);";
+                card.innerHTML = `
+                    <p style="font-size:0.75rem; font-weight:700; opacity:0.6;">${new Date(time).toLocaleDateString('it-IT', { weekday: 'short' }).toUpperCase()}</p>
+                    <div style="font-size: 2.2rem; margin: 8px 0;">${dayCode.emoji}</div>
+                    <p style="font-weight:800;">${Math.round(data.daily.temperature_2m_max[i])}°</p>
+                `;
+                fcast.appendChild(card);
+            });
+            localStorage.setItem("lastCity", cityName);
+        } catch (e) { alert("Errore Meteo"); }
+        document.getElementById("global-loader").style.display = "none";
+    }
+
+    async function fetchNews() {
+        const list = document.getElementById('news-list');
+        list.innerHTML = `<div class="loader"></div>`;
+        try {
+            const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.ansa.it/sito/ansait_rss.xml');
+            const data = await res.json();
+            list.innerHTML = "";
+            data.items.slice(0, 10).forEach(item => {
+                const d = new Date(item.pubDate);
+                const dateStr = `${d.getDate()} ${d.toLocaleString('it-IT', {month:'short'})} • ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
+                const card = document.createElement('div');
+                card.className = 'news-card';
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.7rem; font-weight:bold; color:var(--accent);">
+                        <span>ANSA NEWS</span><span>${dateStr}</span>
+                    </div>
+                    <h4 style="font-size:0.95rem; line-height:1.4;">${item.title}</h4>
+                    <a href="${item.link}" target="_blank" style="color:var(--accent); text-decoration:none; font-size:0.8rem; font-weight:bold; display:block; margin-top:10px; text-align:right;">LEGGI ARTICOLO ›</a>
+                `;
+                list.appendChild(card);
+            });
+        } catch (e) { list.innerHTML = "Errore news."; }
+    }
+
+    async function searchCity(city) {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=it&format=json`);
+        const data = await res.json();
+        if (data.results) fetchWeather(data.results[0].latitude, data.results[0].longitude, data.results[0].name);
+    }
+
+    function init() {
+        navigator.geolocation.getCurrentPosition(
+            async (p) => {
+                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/get?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&language=it&format=json`);
+                const data = await res.json();
+                fetchWeather(p.coords.latitude, p.coords.longitude, data.name || "Tua Posizione");
+            },
+            () => searchCity(localStorage.getItem("lastCity") || "Roma")
+        );
+    }
+
+    document.getElementById("search-form").addEventListener("submit", (e) => { e.preventDefault(); searchCity(document.getElementById("location-input").value); });
+    document.getElementById("geo-btn").addEventListener("click", init);
+    window.onload = init;
+</script>
+</body>
+</html>
