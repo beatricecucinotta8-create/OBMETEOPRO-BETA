@@ -5,7 +5,7 @@ Benvenuti nella repository ufficiale di **OB METEO PRO**, l'applicazione meteo s
 ---
 
 ### 🚀 Cos'è OB METEO PRO?
-OB METEO PRO è un'applicazione Android moderna e reattiva progettata per offrire previsioni meteo precise in tempo reale, monitoraggio della qualità dell'aria, notizie meteo e notifiche istantanee con un'interfaccia elegante ed essenziale.
+OB METEO PRO è un'applicazione Android moderna e reattiva progettata per offrire previsioni meteo precise in tempo reale, monitoraggio dettagliato di qualità dell'aria e pollini, notizie meteo in diretta e un'interfaccia elegante ed essenziale.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/6a617c11-959a-4984-a92c-cf6dded2b221" height="380" alt="Home Screen" />
